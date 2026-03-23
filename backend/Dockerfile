@@ -1,22 +1,18 @@
 FROM python:3.11-slim
 
 RUN apt-get update && apt-get install -y \
-    build-essential \
-    libopenblas-dev \
-    liblapack-dev \
-    wget \
+    libgl1 \
+    libglib2.0-0 \
+    libsm6 \
+    libxext6 \
+    libxrender-dev \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
 COPY requirements.txt .
 
-RUN pip install --no-cache-dir --upgrade pip setuptools wheel
-
-# Preuzmi gotov dlib wheel - ne treba kompajliranje!
-RUN wget -q https://github.com/z-mahmud22/Dlib_Windows_Python3.x/releases/download/v1.0/dlib-19.24.99-cp311-cp311-linux_x86_64.whl \
-    && pip install --no-cache-dir dlib-19.24.99-cp311-cp311-linux_x86_64.whl \
-    && rm dlib-19.24.99-cp311-cp311-linux_x86_64.whl
+RUN pip install --no-cache-dir --upgrade pip
 
 RUN pip install --no-cache-dir -r requirements.txt
 
