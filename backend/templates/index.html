@@ -728,7 +728,7 @@
 
 <script>
 // ── State ──────────────────────────────────────────────────────────────────────
-let apiUrl        = localStorage.getItem("facegate_api") || "";
+let apiUrl = localStorage.getItem("facegate_api") || window.location.origin;
 let cameraStream  = null;
 let regStream     = null;
 let autoScanTimer = null;
