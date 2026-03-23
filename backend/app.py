@@ -5,7 +5,7 @@ import numpy as np
 from io import BytesIO
 from PIL import Image
 from datetime import datetime
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 from deepface import DeepFace
 import firebase_admin
