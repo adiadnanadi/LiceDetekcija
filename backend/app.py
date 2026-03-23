@@ -2,6 +2,7 @@ import os
 import json
 import base64
 import numpy as np
+import threading
 from io import BytesIO
 from PIL import Image
 from datetime import datetime
@@ -36,7 +37,20 @@ MQTT_TOPIC    = os.environ.get("MQTT_TOPIC", "faceGate/komanda")
 MQTT_USERNAME = os.environ.get("MQTT_USERNAME", "")
 MQTT_PASSWORD = os.environ.get("MQTT_PASSWORD", "")
 
+# ── Preuzmi DeepFace model pri startu (ne pri prvom requestu) ─────────────────
+def preuzmi_modele():
+    try:
+        print("[STARTUP] Preuzimam DeepFace Facenet model...")
+        dummy = np.zeros((100, 100, 3), dtype=np.uint8)
+        DeepFace.represent(dummy, model_name="Facenet", enforce_detection=False)
+        print("[STARTUP] Modeli uspješno preuzeti!")
+    except Exception as e:
+        print(f"[STARTUP] Model greška (nije kritično): {e}")
 
+threading.Thread(target=preuzmi_modele, daemon=True).start()
+
+
+# ── Helper funkcije ────────────────────────────────────────────────────────────
 def posalji_mqtt(komanda: str):
     try:
         auth = None
@@ -75,10 +89,12 @@ def ucitaj_sve_encodinge() -> list:
             })
     return korisnici
 
+
+# ── Endpoints ──────────────────────────────────────────────────────────────────
+
 @app.route("/", methods=["GET"])
 def index():
     return render_template("index.html")
-
 
 
 @app.route("/health", methods=["GET"])
