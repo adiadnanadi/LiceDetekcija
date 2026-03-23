@@ -11,15 +11,15 @@ RUN apt-get update && apt-get install -y \
     git \
     && rm -rf /var/lib/apt/lists/*
 
+RUN cmake --version
+
 WORKDIR /app
 
 COPY requirements.txt .
 
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel
 
-RUN pip install --no-cache-dir cmake
-
-RUN CMAKE_ARGS="-DDLIB_NO_GUI_SUPPORT=ON" pip install --no-cache-dir dlib
+RUN pip install --no-cache-dir dlib==19.24.2
 
 RUN pip install --no-cache-dir -r requirements.txt
 
