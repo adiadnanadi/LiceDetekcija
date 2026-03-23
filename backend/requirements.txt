@@ -1,10 +1,13 @@
 flask==3.0.3
 flask-cors==4.0.1
-deepface==0.0.93
-tf-keras
 firebase-admin==6.5.0
 paho-mqtt==1.6.1
 Pillow==10.4.0
 numpy==1.26.4
 gunicorn==22.0.0
 opencv-python-headless==4.9.0.80
+tensorflow==2.15.0
+tf-keras
+mtcnn
+keras-facenet
+retina-face
