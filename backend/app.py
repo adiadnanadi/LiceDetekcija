@@ -7,9 +7,9 @@ from PIL import Image
 from datetime import datetime
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-import face_recognition
+from deepface import DeepFace
 import firebase_admin
-from firebase_admin import credentials, firestore, storage
+from firebase_admin import credentials, firestore
 import paho.mqtt.publish as mqtt_publish
 
 app = Flask(__name__)
@@ -38,7 +38,6 @@ MQTT_PASSWORD = os.environ.get("MQTT_PASSWORD", "")
 
 
 def posalji_mqtt(komanda: str):
-    """Pošalji komandu ESP8266-u putem MQTT brokera."""
     try:
         auth = None
         if MQTT_USERNAME:
@@ -56,7 +55,6 @@ def posalji_mqtt(komanda: str):
 
 
 def base64_u_sliku(b64_string: str) -> np.ndarray:
-    """Konvertuj base64 string u numpy array za face_recognition."""
     if "," in b64_string:
         b64_string = b64_string.split(",")[1]
     img_bytes = base64.b64decode(b64_string)
@@ -65,7 +63,6 @@ def base64_u_sliku(b64_string: str) -> np.ndarray:
 
 
 def ucitaj_sve_encodinge() -> list:
-    """Učitaj sve registrirane korisnike i njihove face encodinge iz Firestorea."""
     korisnici = []
     docs = db.collection("korisnici").stream()
     for doc in docs:
@@ -74,12 +71,10 @@ def ucitaj_sve_encodinge() -> list:
             korisnici.append({
                 "id":       doc.id,
                 "ime":      data.get("ime", "Nepoznat"),
-                "encoding": np.array(data["encoding"]),
+                "encoding": data["encoding"],
             })
     return korisnici
 
-
-# ── Endpoints ──────────────────────────────────────────────────────────────────
 
 @app.route("/health", methods=["GET"])
 def health():
@@ -88,10 +83,6 @@ def health():
 
 @app.route("/register", methods=["POST"])
 def register():
-    """
-    Registruj novog korisnika.
-    Body: { "ime": "Adnan", "email": "...", "slika": "<base64>" }
-    """
     try:
         data    = request.get_json()
         ime     = data.get("ime", "").strip()
@@ -102,18 +93,21 @@ def register():
             return jsonify({"greška": "Nedostaju ime ili slika"}), 400
 
         img_array = base64_u_sliku(b64_img)
-        lica      = face_recognition.face_locations(img_array)
 
-        if not lica:
+        try:
+            embedding_obj = DeepFace.represent(
+                img_array,
+                model_name="Facenet",
+                enforce_detection=True
+            )
+            encoding = embedding_obj[0]["embedding"]
+        except Exception:
             return jsonify({"greška": "Nije pronađeno lice na slici"}), 400
 
-        encoding = face_recognition.face_encodings(img_array, lica)[0]
-
-        # Spremi u Firestore
         doc_ref = db.collection("korisnici").add({
             "ime":      ime,
             "email":    email,
-            "encoding": encoding.tolist(),
+            "encoding": encoding,
             "datum":    datetime.utcnow().isoformat(),
             "aktivan":  True,
         })
@@ -131,10 +125,6 @@ def register():
 
 @app.route("/recognize", methods=["POST"])
 def recognize():
-    """
-    Prepoznaj lice s kamere.
-    Body: { "slika": "<base64>" }
-    """
     try:
         data    = request.get_json()
         b64_img = data.get("slika", "")
@@ -143,17 +133,22 @@ def recognize():
             return jsonify({"greška": "Nema slike"}), 400
 
         img_array = base64_u_sliku(b64_img)
-        lica      = face_recognition.face_locations(img_array)
 
-        if not lica:
+        try:
+            embedding_obj = DeepFace.represent(
+                img_array,
+                model_name="Facenet",
+                enforce_detection=True
+            )
+            nepoznati_encoding = np.array(embedding_obj[0]["embedding"])
+        except Exception:
             return jsonify({
                 "status":    "nema_lica",
                 "poruka":    "Nije pronađeno lice",
                 "prepoznat": False,
             })
 
-        nepoznati_encoding = face_recognition.face_encodings(img_array, lica)[0]
-        korisnici          = ucitaj_sve_encodinge()
+        korisnici = ucitaj_sve_encodinge()
 
         if not korisnici:
             return jsonify({
@@ -162,17 +157,20 @@ def recognize():
                 "prepoznat": False,
             })
 
-        poznati_encodinzi = [k["encoding"] for k in korisnici]
-        udaljenosti       = face_recognition.face_distance(poznati_encodinzi, nepoznati_encoding)
-        min_idx           = int(np.argmin(udaljenosti))
-        min_dist          = float(udaljenosti[min_idx])
-        prag              = 0.50  # stricter = manji prag
+        udaljenosti = [
+            np.linalg.norm(nepoznati_encoding - np.array(k["encoding"]))
+            for k in korisnici
+        ]
+        min_idx  = int(np.argmin(udaljenosti))
+        min_dist = float(udaljenosti[min_idx])
+
+        # Facenet prag — ispod 10 = ista osoba
+        prag = 10.0
 
         if min_dist < prag:
             korisnik   = korisnici[min_idx]
-            confidence = round((1 - min_dist) * 100, 1)
+            confidence = round(max(0, (1 - min_dist / prag) * 100), 1)
 
-            # Log u Firestore
             db.collection("log_pristupa").add({
                 "korisnik_id": korisnik["id"],
                 "ime":         korisnik["ime"],
@@ -181,7 +179,6 @@ def recognize():
                 "timestamp":   datetime.utcnow().isoformat(),
             })
 
-            # Pošalji ESP8266-u
             posalji_mqtt("OTVORI")
 
             print(f"[RECOGNIZE] Prepoznat: {korisnik['ime']} ({confidence}%)")
@@ -193,10 +190,9 @@ def recognize():
                 "poruka":     f"Dobrodošao, {korisnik['ime']}!",
             })
         else:
-            # Log nepoznate osobe
             db.collection("log_pristupa").add({
-                "ime":      "Nepoznata osoba",
-                "status":   "odbijen",
+                "ime":       "Nepoznata osoba",
+                "status":    "odbijen",
                 "timestamp": datetime.utcnow().isoformat(),
             })
 
@@ -216,7 +212,6 @@ def recognize():
 
 @app.route("/korisnici", methods=["GET"])
 def lista_korisnika():
-    """Vrati listu registriranih korisnika (bez encodinga)."""
     try:
         docs = db.collection("korisnici").stream()
         lista = []
@@ -235,7 +230,6 @@ def lista_korisnika():
 
 @app.route("/log", methods=["GET"])
 def log_pristupa():
-    """Vrati posljednjih 50 zapisa pristupa."""
     try:
         docs = (
             db.collection("log_pristupa")
@@ -251,7 +245,6 @@ def log_pristupa():
 
 @app.route("/korisnici/<korisnik_id>", methods=["DELETE"])
 def obrisi_korisnika(korisnik_id):
-    """Obriši korisnika iz sistema."""
     try:
         db.collection("korisnici").document(korisnik_id).delete()
         return jsonify({"poruka": "Korisnik obrisan"})
