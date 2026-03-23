@@ -6,10 +6,9 @@ RUN apt-get update && apt-get install -y \
     libopenblas-dev \
     liblapack-dev \
     libx11-dev \
-    libgtk-3-dev \
     libboost-all-dev \
     python3-dev \
-    pkg-config \
+    git \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -20,10 +19,7 @@ RUN pip install --no-cache-dir --upgrade pip setuptools wheel
 
 RUN pip install --no-cache-dir cmake
 
-RUN pip install --no-cache-dir \
-    --global-option=build_ext \
-    --global-option="--no" \
-    dlib
+RUN CMAKE_ARGS="-DDLIB_NO_GUI_SUPPORT=ON" pip install --no-cache-dir dlib
 
 RUN pip install --no-cache-dir -r requirements.txt
 
