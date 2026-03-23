@@ -2,16 +2,10 @@ FROM python:3.11-slim
 
 RUN apt-get update && apt-get install -y \
     build-essential \
-    cmake \
     libopenblas-dev \
     liblapack-dev \
-    libx11-dev \
-    libboost-all-dev \
-    python3-dev \
-    git \
+    wget \
     && rm -rf /var/lib/apt/lists/*
-
-RUN cmake --version
 
 WORKDIR /app
 
@@ -19,7 +13,10 @@ COPY requirements.txt .
 
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel
 
-RUN pip install --no-cache-dir dlib==19.24.2
+# Preuzmi gotov dlib wheel - ne treba kompajliranje!
+RUN wget -q https://github.com/z-mahmud22/Dlib_Windows_Python3.x/releases/download/v1.0/dlib-19.24.99-cp311-cp311-linux_x86_64.whl \
+    && pip install --no-cache-dir dlib-19.24.99-cp311-cp311-linux_x86_64.whl \
+    && rm dlib-19.24.99-cp311-cp311-linux_x86_64.whl
 
 RUN pip install --no-cache-dir -r requirements.txt
 
