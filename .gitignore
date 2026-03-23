@@ -1,0 +1,20 @@
+# Tajni ključevi — NIKAD ne commitaj!
+serviceAccountKey.json
+*.json
+!package.json
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.env
+venv/
+.venv/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
