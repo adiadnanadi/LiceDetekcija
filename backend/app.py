@@ -8,7 +8,9 @@ from PIL import Image
 from datetime import datetime
 from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
-from deepface import DeepFace
+import cv2
+import insightface
+from insightface.app import FaceAnalysis
 import firebase_admin
 from firebase_admin import credentials, firestore
 import paho.mqtt.publish as mqtt_publish
@@ -37,17 +39,23 @@ MQTT_TOPIC    = os.environ.get("MQTT_TOPIC", "faceGate/komanda")
 MQTT_USERNAME = os.environ.get("MQTT_USERNAME", "")
 MQTT_PASSWORD = os.environ.get("MQTT_PASSWORD", "")
 
-# ── Preuzmi DeepFace model pri startu (ne pri prvom requestu) ─────────────────
-def preuzmi_modele():
-    try:
-        print("[STARTUP] Preuzimam DeepFace Facenet model...")
-        dummy = np.zeros((100, 100, 3), dtype=np.uint8)
-        DeepFace.represent(dummy, model_name="Facenet", enforce_detection=False)
-        print("[STARTUP] Modeli uspješno preuzeti!")
-    except Exception as e:
-        print(f"[STARTUP] Model greška (nije kritično): {e}")
+# ── InsightFace model ──────────────────────────────────────────────────────────
+face_app = None
 
-threading.Thread(target=preuzmi_modele, daemon=True).start()
+def init_model():
+    global face_app
+    try:
+        print("[STARTUP] Inicijaliziram InsightFace model...")
+        face_app = FaceAnalysis(
+            name="buffalo_sc",
+            providers=["CPUExecutionProvider"]
+        )
+        face_app.prepare(ctx_id=0, det_size=(320, 320))
+        print("[STARTUP] InsightFace model spreman!")
+    except Exception as e:
+        print(f"[STARTUP] Greška modela: {e}")
+
+threading.Thread(target=init_model, daemon=True).start()
 
 
 # ── Helper funkcije ────────────────────────────────────────────────────────────
@@ -73,7 +81,8 @@ def base64_u_sliku(b64_string: str) -> np.ndarray:
         b64_string = b64_string.split(",")[1]
     img_bytes = base64.b64decode(b64_string)
     pil_img = Image.open(BytesIO(img_bytes)).convert("RGB")
-    return np.array(pil_img)
+    # InsightFace treba BGR format
+    return cv2.cvtColor(np.array(pil_img), cv2.COLOR_RGB2BGR)
 
 
 def ucitaj_sve_encodinge() -> list:
@@ -90,6 +99,18 @@ def ucitaj_sve_encodinge() -> list:
     return korisnici
 
 
+def dobavi_embedding(img_bgr: np.ndarray):
+    """Vrati embedding lica ili None ako lice nije pronađeno."""
+    if face_app is None:
+        raise Exception("Model još nije inicijaliziran, pokušaj za 10 sekundi")
+    lica = face_app.get(img_bgr)
+    if not lica:
+        return None
+    # Uzmi najveće lice na slici
+    lice = max(lica, key=lambda l: (l.bbox[2]-l.bbox[0]) * (l.bbox[3]-l.bbox[1]))
+    return lice.embedding / np.linalg.norm(lice.embedding)  # normaliziraj
+
+
 # ── Endpoints ──────────────────────────────────────────────────────────────────
 
 @app.route("/", methods=["GET"])
@@ -99,7 +120,8 @@ def index():
 
 @app.route("/health", methods=["GET"])
 def health():
-    return jsonify({"status": "ok", "servis": "FaceGate API"})
+    model_status = "spreman" if face_app is not None else "učitavam..."
+    return jsonify({"status": "ok", "servis": "FaceGate API", "model": model_status})
 
 
 @app.route("/register", methods=["POST"])
@@ -113,22 +135,19 @@ def register():
         if not ime or not b64_img:
             return jsonify({"greška": "Nedostaju ime ili slika"}), 400
 
-        img_array = base64_u_sliku(b64_img)
+        img_bgr = base64_u_sliku(b64_img)
 
         try:
-            embedding_obj = DeepFace.represent(
-                img_array,
-                model_name="Facenet",
-                enforce_detection=True
-            )
-            encoding = embedding_obj[0]["embedding"]
-        except Exception:
-            return jsonify({"greška": "Nije pronađeno lice na slici"}), 400
+            embedding = dobavi_embedding(img_bgr)
+            if embedding is None:
+                return jsonify({"greška": "Nije pronađeno lice na slici"}), 400
+        except Exception as e:
+            return jsonify({"greška": str(e)}), 503
 
         doc_ref = db.collection("korisnici").add({
             "ime":      ime,
             "email":    email,
-            "encoding": encoding,
+            "encoding": embedding.tolist(),
             "datum":    datetime.utcnow().isoformat(),
             "aktivan":  True,
         })
@@ -153,16 +172,14 @@ def recognize():
         if not b64_img:
             return jsonify({"greška": "Nema slike"}), 400
 
-        img_array = base64_u_sliku(b64_img)
+        img_bgr = base64_u_sliku(b64_img)
 
         try:
-            embedding_obj = DeepFace.represent(
-                img_array,
-                model_name="Facenet",
-                enforce_detection=True
-            )
-            nepoznati_encoding = np.array(embedding_obj[0]["embedding"])
-        except Exception:
+            nepoznati_emb = dobavi_embedding(img_bgr)
+        except Exception as e:
+            return jsonify({"greška": str(e)}), 503
+
+        if nepoznati_emb is None:
             return jsonify({
                 "status":    "nema_lica",
                 "poruka":    "Nije pronađeno lice",
@@ -178,19 +195,20 @@ def recognize():
                 "prepoznat": False,
             })
 
-        udaljenosti = [
-            np.linalg.norm(nepoznati_encoding - np.array(k["encoding"]))
+        # Kosinusna sličnost (viša = sličniji, max=1.0)
+        slicnosti = [
+            float(np.dot(nepoznati_emb, np.array(k["encoding"])))
             for k in korisnici
         ]
-        min_idx  = int(np.argmin(udaljenosti))
-        min_dist = float(udaljenosti[min_idx])
+        max_idx    = int(np.argmax(slicnosti))
+        max_sim    = slicnosti[max_idx]
 
-        # Facenet prag — ispod 10 = ista osoba
-        prag = 10.0
+        # Prag — iznad 0.4 = ista osoba
+        prag = 0.4
 
-        if min_dist < prag:
-            korisnik   = korisnici[min_idx]
-            confidence = round(max(0, (1 - min_dist / prag) * 100), 1)
+        if max_sim >= prag:
+            korisnik   = korisnici[max_idx]
+            confidence = round(max_sim * 100, 1)
 
             db.collection("log_pristupa").add({
                 "korisnik_id": korisnik["id"],
@@ -219,7 +237,7 @@ def recognize():
 
             posalji_mqtt("ALARM")
 
-            print(f"[RECOGNIZE] Nepoznato lice (dist={min_dist:.3f})")
+            print(f"[RECOGNIZE] Nepoznato lice (sim={max_sim:.3f})")
             return jsonify({
                 "status":    "nepoznat",
                 "prepoznat": False,
