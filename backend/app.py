@@ -117,7 +117,9 @@ def dobavi_embedding(img_bgr: np.ndarray):
 def index():
     return render_template("index.html")
 
-
+@app.route("/ping", methods=["GET"])
+def ping():
+    return "ok", 200
 @app.route("/health", methods=["GET"])
 def health():
     model_status = "spreman" if face_app is not None else "učitavam..."
