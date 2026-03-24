@@ -14,9 +14,6 @@ COPY requirements.txt .
 
 RUN pip install --no-cache-dir --upgrade pip
 
-# Instaliraj deepface BEZ dlib dependencija
-RUN pip install --no-cache-dir --no-deps deepface==0.0.93
-
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
