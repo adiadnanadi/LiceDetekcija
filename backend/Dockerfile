@@ -19,7 +19,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 RUN python -c "\
 from insightface.app import FaceAnalysis; \
 fa = FaceAnalysis(name='buffalo_l', providers=['CPUExecutionProvider']); \
-fa.prepare(ctx_id=0, det_size=(640, 640)); \
+fa.prepare(ctx_id=0, det_size=(320, 320)); \
 print('buffalo_l model ugrajen u Docker image!')"
 
 # Kopiraj cijelu aplikaciju
