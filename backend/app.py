@@ -18,7 +18,7 @@ import paho.mqtt.publish as mqtt_publish
 app = Flask(__name__)
 CORS(app)
 
-# ── Firebase init ──────────────────────────────────────────────────────────────
+# ── Firebase init ─────────────────────────────────────────────────────────────
 firebase_key_json = os.environ.get("FIREBASE_KEY")
 if firebase_key_json:
     cred_dict = json.loads(firebase_key_json)
