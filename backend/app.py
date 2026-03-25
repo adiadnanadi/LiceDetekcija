@@ -45,12 +45,12 @@ face_app = None
 def init_model():
     global face_app
     try:
-        print("[STARTUP] Inicijaliziram InsightFace model...")
+        print("[STARTUP] Inicijaliziram InsightFace buffalo_l model...")
         face_app = FaceAnalysis(
-    name="buffalo_sc",
-    providers=["CPUExecutionProvider"]
-)
-face_app.prepare(ctx_id=0, det_size=(320, 320))
+            name="buffalo_l",
+            providers=["CPUExecutionProvider"]
+        )
+        face_app.prepare(ctx_id=0, det_size=(640, 640))
         print("[STARTUP] InsightFace model spreman!")
     except Exception as e:
         print(f"[STARTUP] Greška modela: {e}")
@@ -81,7 +81,6 @@ def base64_u_sliku(b64_string: str) -> np.ndarray:
         b64_string = b64_string.split(",")[1]
     img_bytes = base64.b64decode(b64_string)
     pil_img = Image.open(BytesIO(img_bytes)).convert("RGB")
-    # InsightFace treba BGR format
     return cv2.cvtColor(np.array(pil_img), cv2.COLOR_RGB2BGR)
 
 
@@ -100,7 +99,7 @@ def ucitaj_sve_encodinge() -> list:
 
 
 def dobavi_embedding(img_bgr: np.ndarray):
-    """Vrati embedding lica ili None ako lice nije pronađeno."""
+    """Vrati normalizirani embedding lica ili None ako lice nije pronađeno."""
     if face_app is None:
         raise Exception("Model još nije inicijaliziran, pokušaj za 10 sekundi")
     lica = face_app.get(img_bgr)
@@ -108,7 +107,8 @@ def dobavi_embedding(img_bgr: np.ndarray):
         return None
     # Uzmi najveće lice na slici
     lice = max(lica, key=lambda l: (l.bbox[2]-l.bbox[0]) * (l.bbox[3]-l.bbox[1]))
-    return lice.embedding / np.linalg.norm(lice.embedding)  # normaliziraj
+    emb = lice.embedding
+    return emb / np.linalg.norm(emb)
 
 
 # ── Endpoints ──────────────────────────────────────────────────────────────────
@@ -117,12 +117,15 @@ def dobavi_embedding(img_bgr: np.ndarray):
 def index():
     return render_template("index.html")
 
+
 @app.route("/ping", methods=["GET"])
 def ping():
     return "ok", 200
+
+
 @app.route("/health", methods=["GET"])
 def health():
-    model_status = "spreman" if face_app is not None else "učitavam..."
+    model_status = "spreman" if face_app is not None else "ucitavam..."
     return jsonify({"status": "ok", "servis": "FaceGate API", "model": model_status})
 
 
@@ -202,11 +205,13 @@ def recognize():
             float(np.dot(nepoznati_emb, np.array(k["encoding"])))
             for k in korisnici
         ]
-        max_idx    = int(np.argmax(slicnosti))
-        max_sim    = slicnosti[max_idx]
+        max_idx = int(np.argmax(slicnosti))
+        max_sim = slicnosti[max_idx]
 
-        # Prag — iznad 0.4 = ista osoba
-        prag = 0.4
+        # Prag 0.6 — mora biti stvarno ista osoba
+        prag = 0.6
+
+        print(f"[RECOGNIZE] Najbolja sličnost: {max_sim:.3f} (prag: {prag})")
 
         if max_sim >= prag:
             korisnik   = korisnici[max_idx]
