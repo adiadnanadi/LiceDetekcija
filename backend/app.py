@@ -18,7 +18,7 @@ import paho.mqtt.publish as mqtt_publish
 app = Flask(__name__)
 CORS(app)
 
-# ── Firebase init ─────────────────────────────────────────────────────────────
+# ── Firebase init ──────────────────────────────────────────────────────────────
 firebase_key_json = os.environ.get("FIREBASE_KEY")
 if firebase_key_json:
     cred_dict = json.loads(firebase_key_json)
@@ -45,12 +45,12 @@ face_app = None
 def init_model():
     global face_app
     try:
-        print("[STARTUP] Inicijaliziram InsightFace buffalo_l model...")
+        print("[STARTUP] Inicijaliziram InsightFace model...")
         face_app = FaceAnalysis(
-            name="buffalo_l",
-            providers=["CPUExecutionProvider"]
-        )
-        face_app.prepare(ctx_id=0, det_size=(640, 640))
+    name="buffalo_l",
+    providers=["CPUExecutionProvider"]
+)
+face_app.prepare(ctx_id=0, det_size=(640, 640))
         print("[STARTUP] InsightFace model spreman!")
     except Exception as e:
         print(f"[STARTUP] Greška modela: {e}")
@@ -81,6 +81,7 @@ def base64_u_sliku(b64_string: str) -> np.ndarray:
         b64_string = b64_string.split(",")[1]
     img_bytes = base64.b64decode(b64_string)
     pil_img = Image.open(BytesIO(img_bytes)).convert("RGB")
+    # InsightFace treba BGR format
     return cv2.cvtColor(np.array(pil_img), cv2.COLOR_RGB2BGR)
 
 
@@ -99,7 +100,7 @@ def ucitaj_sve_encodinge() -> list:
 
 
 def dobavi_embedding(img_bgr: np.ndarray):
-    """Vrati normalizirani embedding lica ili None ako lice nije pronađeno."""
+    """Vrati embedding lica ili None ako lice nije pronađeno."""
     if face_app is None:
         raise Exception("Model još nije inicijaliziran, pokušaj za 10 sekundi")
     lica = face_app.get(img_bgr)
@@ -107,8 +108,7 @@ def dobavi_embedding(img_bgr: np.ndarray):
         return None
     # Uzmi najveće lice na slici
     lice = max(lica, key=lambda l: (l.bbox[2]-l.bbox[0]) * (l.bbox[3]-l.bbox[1]))
-    emb = lice.embedding
-    return emb / np.linalg.norm(emb)
+    return lice.embedding / np.linalg.norm(lice.embedding)  # normaliziraj
 
 
 # ── Endpoints ──────────────────────────────────────────────────────────────────
@@ -117,15 +117,12 @@ def dobavi_embedding(img_bgr: np.ndarray):
 def index():
     return render_template("index.html")
 
-
 @app.route("/ping", methods=["GET"])
 def ping():
     return "ok", 200
-
-
 @app.route("/health", methods=["GET"])
 def health():
-    model_status = "spreman" if face_app is not None else "ucitavam..."
+    model_status = "spreman" if face_app is not None else "učitavam..."
     return jsonify({"status": "ok", "servis": "FaceGate API", "model": model_status})
 
 
@@ -205,13 +202,11 @@ def recognize():
             float(np.dot(nepoznati_emb, np.array(k["encoding"])))
             for k in korisnici
         ]
-        max_idx = int(np.argmax(slicnosti))
-        max_sim = slicnosti[max_idx]
+        max_idx    = int(np.argmax(slicnosti))
+        max_sim    = slicnosti[max_idx]
 
-        # Prag 0.6 — mora biti stvarno ista osoba
-        prag = 0.6
-
-        print(f"[RECOGNIZE] Najbolja sličnost: {max_sim:.3f} (prag: {prag})")
+        # Prag — iznad 0.4 = ista osoba
+        prag = 0.4
 
         if max_sim >= prag:
             korisnik   = korisnici[max_idx]
