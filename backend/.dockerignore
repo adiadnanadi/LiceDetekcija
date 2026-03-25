@@ -1,6 +1,10 @@
 __pycache__
 *.pyc
 .git
+.gitignore
 .env
 venv
+node_modules
 serviceAccountKey.json
+*.md
+.DS_Store
