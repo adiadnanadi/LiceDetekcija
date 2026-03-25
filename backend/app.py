@@ -2,14 +2,12 @@ import os
 import json
 import base64
 import numpy as np
-import threading
 from io import BytesIO
 from PIL import Image
 from datetime import datetime
 from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 import cv2
-import insightface
 from insightface.app import FaceAnalysis
 import firebase_admin
 from firebase_admin import credentials, firestore
@@ -18,7 +16,7 @@ import paho.mqtt.publish as mqtt_publish
 app = Flask(__name__)
 CORS(app)
 
-# ── Firebase init ──────────────────────────────────────────────────────────────
+# ── Firebase init ─────────────────────────────────────────────
 firebase_key_json = os.environ.get("FIREBASE_KEY")
 if firebase_key_json:
     cred_dict = json.loads(firebase_key_json)
@@ -27,43 +25,45 @@ else:
     cred = credentials.Certificate("serviceAccountKey.json")
 
 firebase_admin.initialize_app(cred, {
-    "storageBucket": os.environ.get("FIREBASE_BUCKET", "your-project.appspot.com")
+    "storageBucket": os.environ.get(
+        "FIREBASE_BUCKET", "your-project.appspot.com"
+    )
 })
 
 db = firestore.client()
 
-# ── MQTT config ────────────────────────────────────────────────────────────────
+# ── MQTT config ───────────────────────────────────────────────
 MQTT_BROKER   = os.environ.get("MQTT_BROKER", "broker.hivemq.com")
 MQTT_PORT     = int(os.environ.get("MQTT_PORT", 1883))
 MQTT_TOPIC    = os.environ.get("MQTT_TOPIC", "faceGate/komanda")
 MQTT_USERNAME = os.environ.get("MQTT_USERNAME", "")
 MQTT_PASSWORD = os.environ.get("MQTT_PASSWORD", "")
 
-# ── InsightFace model ──────────────────────────────────────────────────────────
+# ── InsightFace model (SINHRONO - ne u thread-u) ─────────────
+# Model je već prebačen u Docker image, pa se samo učita iz diska
+print("[STARTUP] Učitavam InsightFace buffalo_l model...")
 face_app = None
-
-def init_model():
-    global face_app
-    try:
-        print("[STARTUP] Inicijaliziram InsightFace model...")
-       face_app = FaceAnalysis(
-    name="buffalo_sc",
-    providers=["CPUExecutionProvider"]
-)
-face_app.prepare(ctx_id=0, det_size=(320, 320))
-        print("[STARTUP] InsightFace model spreman!")
-    except Exception as e:
-        print(f"[STARTUP] Greška modela: {e}")
-
-threading.Thread(target=init_model, daemon=True).start()
+try:
+    face_app = FaceAnalysis(
+        name="buffalo_l",
+        providers=["CPUExecutionProvider"]
+    )
+    face_app.prepare(ctx_id=0, det_size=(640, 640))
+    print("[STARTUP] ✅ InsightFace model spreman!")
+except Exception as e:
+    print(f"[STARTUP] ❌ Greška modela: {e}")
 
 
-# ── Helper funkcije ────────────────────────────────────────────────────────────
+# ── Helper funkcije ──────────────────────────────────────────
+
 def posalji_mqtt(komanda: str):
     try:
         auth = None
         if MQTT_USERNAME:
-            auth = {"username": MQTT_USERNAME, "password": MQTT_PASSWORD}
+            auth = {
+                "username": MQTT_USERNAME,
+                "password": MQTT_PASSWORD
+            }
         mqtt_publish.single(
             topic=MQTT_TOPIC,
             payload=komanda,
@@ -81,7 +81,6 @@ def base64_u_sliku(b64_string: str) -> np.ndarray:
         b64_string = b64_string.split(",")[1]
     img_bytes = base64.b64decode(b64_string)
     pil_img = Image.open(BytesIO(img_bytes)).convert("RGB")
-    # InsightFace treba BGR format
     return cv2.cvtColor(np.array(pil_img), cv2.COLOR_RGB2BGR)
 
 
@@ -100,30 +99,41 @@ def ucitaj_sve_encodinge() -> list:
 
 
 def dobavi_embedding(img_bgr: np.ndarray):
-    """Vrati embedding lica ili None ako lice nije pronađeno."""
     if face_app is None:
-        raise Exception("Model još nije inicijaliziran, pokušaj za 10 sekundi")
+        raise Exception(
+            "Model nije inicijaliziran — provjeri logove"
+        )
     lica = face_app.get(img_bgr)
     if not lica:
         return None
-    # Uzmi najveće lice na slici
-    lice = max(lica, key=lambda l: (l.bbox[2]-l.bbox[0]) * (l.bbox[3]-l.bbox[1]))
-    return lice.embedding / np.linalg.norm(lice.embedding)  # normaliziraj
+    lice = max(
+        lica,
+        key=lambda l: (l.bbox[2] - l.bbox[0]) * (l.bbox[3] - l.bbox[1])
+    )
+    emb = lice.embedding
+    return emb / np.linalg.norm(emb)
 
 
-# ── Endpoints ──────────────────────────────────────────────────────────────────
+# ── Endpoints ────────────────────────────────────────────────
 
 @app.route("/", methods=["GET"])
 def index():
     return render_template("index.html")
 
+
 @app.route("/ping", methods=["GET"])
 def ping():
     return "ok", 200
+
+
 @app.route("/health", methods=["GET"])
 def health():
-    model_status = "spreman" if face_app is not None else "učitavam..."
-    return jsonify({"status": "ok", "servis": "FaceGate API", "model": model_status})
+    model_status = "spreman" if face_app is not None else "GREŠKA"
+    return jsonify({
+        "status": "ok",
+        "servis": "FaceGate API",
+        "model":  model_status
+    })
 
 
 @app.route("/register", methods=["POST"])
@@ -142,7 +152,9 @@ def register():
         try:
             embedding = dobavi_embedding(img_bgr)
             if embedding is None:
-                return jsonify({"greška": "Nije pronađeno lice na slici"}), 400
+                return jsonify({
+                    "greška": "Nije pronađeno lice na slici"
+                }), 400
         except Exception as e:
             return jsonify({"greška": str(e)}), 503
 
@@ -197,16 +209,16 @@ def recognize():
                 "prepoznat": False,
             })
 
-        # Kosinusna sličnost (viša = sličniji, max=1.0)
         slicnosti = [
             float(np.dot(nepoznati_emb, np.array(k["encoding"])))
             for k in korisnici
         ]
-        max_idx    = int(np.argmax(slicnosti))
-        max_sim    = slicnosti[max_idx]
+        max_idx = int(np.argmax(slicnosti))
+        max_sim = slicnosti[max_idx]
 
-        # Prag — iznad 0.4 = ista osoba
-        prag = 0.4
+        prag = 0.6
+
+        print(f"[RECOGNIZE] Sličnost: {max_sim:.3f} (prag: {prag})")
 
         if max_sim >= prag:
             korisnik   = korisnici[max_idx]
@@ -222,7 +234,7 @@ def recognize():
 
             posalji_mqtt("OTVORI")
 
-            print(f"[RECOGNIZE] Prepoznat: {korisnik['ime']} ({confidence}%)")
+            print(f"[RECOGNIZE] ✅ {korisnik['ime']} ({confidence}%)")
             return jsonify({
                 "status":     "prepoznat",
                 "prepoznat":  True,
@@ -239,7 +251,7 @@ def recognize():
 
             posalji_mqtt("ALARM")
 
-            print(f"[RECOGNIZE] Nepoznato lice (sim={max_sim:.3f})")
+            print(f"[RECOGNIZE] ❌ Nepoznat (sim={max_sim:.3f})")
             return jsonify({
                 "status":    "nepoznat",
                 "prepoznat": False,
