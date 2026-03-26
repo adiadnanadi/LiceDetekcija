@@ -25,9 +25,7 @@ else:
     cred = credentials.Certificate("serviceAccountKey.json")
 
 firebase_admin.initialize_app(cred, {
-    "storageBucket": os.environ.get(
-        "FIREBASE_BUCKET", "your-project.appspot.com"
-    )
+    "storageBucket": os.environ.get("FIREBASE_BUCKET", "your-project.appspot.com")
 })
 
 db = firestore.client()
@@ -39,19 +37,19 @@ MQTT_TOPIC    = os.environ.get("MQTT_TOPIC", "faceGate/komanda")
 MQTT_USERNAME = os.environ.get("MQTT_USERNAME", "")
 MQTT_PASSWORD = os.environ.get("MQTT_PASSWORD", "")
 
-# ── InsightFace model (SINHRONO - ne u thread-u) ─────────────
-# Model je već prebačen u Docker image, pa se samo učita iz diska
-print("[STARTUP] Učitavam InsightFace buffalo_l model...")
+# ── InsightFace model ─────────────────────────────────────────
+print("[STARTUP] Ucitavam InsightFace buffalo_sc model...")
 face_app = None
 try:
-  face_app = FaceAnalysis(
-    name="buffalo_sc",
-    providers=["CPUExecutionProvider"]
-)
-face_app.prepare(ctx_id=0, det_size=(320, 320))
-    print("[STARTUP] ✅ InsightFace model spreman!")
+    face_app = FaceAnalysis(
+        name="buffalo_sc",
+        root="/root/.insightface",
+        providers=["CPUExecutionProvider"]
+    )
+    face_app.prepare(ctx_id=0, det_size=(320, 320))
+    print("[STARTUP] InsightFace model spreman!")
 except Exception as e:
-    print(f"[STARTUP] ❌ Greška modela: {e}")
+    print(f"[STARTUP] Greska modela: {e}")
 
 
 # ── Helper funkcije ──────────────────────────────────────────
@@ -60,10 +58,7 @@ def posalji_mqtt(komanda: str):
     try:
         auth = None
         if MQTT_USERNAME:
-            auth = {
-                "username": MQTT_USERNAME,
-                "password": MQTT_PASSWORD
-            }
+            auth = {"username": MQTT_USERNAME, "password": MQTT_PASSWORD}
         mqtt_publish.single(
             topic=MQTT_TOPIC,
             payload=komanda,
@@ -73,7 +68,7 @@ def posalji_mqtt(komanda: str):
         )
         print(f"[MQTT] Poslano: {komanda}")
     except Exception as e:
-        print(f"[MQTT] Greška: {e}")
+        print(f"[MQTT] Greska: {e}")
 
 
 def base64_u_sliku(b64_string: str) -> np.ndarray:
@@ -100,16 +95,11 @@ def ucitaj_sve_encodinge() -> list:
 
 def dobavi_embedding(img_bgr: np.ndarray):
     if face_app is None:
-        raise Exception(
-            "Model nije inicijaliziran — provjeri logove"
-        )
+        raise Exception("Model nije inicijaliziran — provjeri logove")
     lica = face_app.get(img_bgr)
     if not lica:
         return None
-    lice = max(
-        lica,
-        key=lambda l: (l.bbox[2] - l.bbox[0]) * (l.bbox[3] - l.bbox[1])
-    )
+    lice = max(lica, key=lambda l: (l.bbox[2] - l.bbox[0]) * (l.bbox[3] - l.bbox[1]))
     emb = lice.embedding
     return emb / np.linalg.norm(emb)
 
@@ -128,12 +118,8 @@ def ping():
 
 @app.route("/health", methods=["GET"])
 def health():
-    model_status = "spreman" if face_app is not None else "GREŠKA"
-    return jsonify({
-        "status": "ok",
-        "servis": "FaceGate API",
-        "model":  model_status
-    })
+    model_status = "spreman" if face_app is not None else "GRESKA"
+    return jsonify({"status": "ok", "servis": "FaceGate API", "model": model_status})
 
 
 @app.route("/register", methods=["POST"])
@@ -145,18 +131,16 @@ def register():
         b64_img = data.get("slika", "")
 
         if not ime or not b64_img:
-            return jsonify({"greška": "Nedostaju ime ili slika"}), 400
+            return jsonify({"greska": "Nedostaju ime ili slika"}), 400
 
         img_bgr = base64_u_sliku(b64_img)
 
         try:
             embedding = dobavi_embedding(img_bgr)
             if embedding is None:
-                return jsonify({
-                    "greška": "Nije pronađeno lice na slici"
-                }), 400
+                return jsonify({"greska": "Nije pronadeno lice na slici"}), 400
         except Exception as e:
-            return jsonify({"greška": str(e)}), 503
+            return jsonify({"greska": str(e)}), 503
 
         doc_ref = db.collection("korisnici").add({
             "ime":      ime,
@@ -168,13 +152,13 @@ def register():
 
         print(f"[REGISTER] Registriran: {ime} ({doc_ref[1].id})")
         return jsonify({
-            "poruka": f"Korisnik '{ime}' uspješno registriran!",
+            "poruka": f"Korisnik '{ime}' uspjesno registriran!",
             "id":     doc_ref[1].id,
         })
 
     except Exception as e:
-        print(f"[REGISTER] Greška: {e}")
-        return jsonify({"greška": str(e)}), 500
+        print(f"[REGISTER] Greska: {e}")
+        return jsonify({"greska": str(e)}), 500
 
 
 @app.route("/recognize", methods=["POST"])
@@ -184,19 +168,19 @@ def recognize():
         b64_img = data.get("slika", "")
 
         if not b64_img:
-            return jsonify({"greška": "Nema slike"}), 400
+            return jsonify({"greska": "Nema slike"}), 400
 
         img_bgr = base64_u_sliku(b64_img)
 
         try:
             nepoznati_emb = dobavi_embedding(img_bgr)
         except Exception as e:
-            return jsonify({"greška": str(e)}), 503
+            return jsonify({"greska": str(e)}), 503
 
         if nepoznati_emb is None:
             return jsonify({
                 "status":    "nema_lica",
-                "poruka":    "Nije pronađeno lice",
+                "poruka":    "Nije pronadeno lice",
                 "prepoznat": False,
             })
 
@@ -218,7 +202,7 @@ def recognize():
 
         prag = 0.6
 
-        print(f"[RECOGNIZE] Sličnost: {max_sim:.3f} (prag: {prag})")
+        print(f"[RECOGNIZE] Slicnost: {max_sim:.3f} (prag: {prag})")
 
         if max_sim >= prag:
             korisnik   = korisnici[max_idx]
@@ -234,13 +218,13 @@ def recognize():
 
             posalji_mqtt("OTVORI")
 
-            print(f"[RECOGNIZE] ✅ {korisnik['ime']} ({confidence}%)")
+            print(f"[RECOGNIZE] Prepoznat: {korisnik['ime']} ({confidence}%)")
             return jsonify({
                 "status":     "prepoznat",
                 "prepoznat":  True,
                 "ime":        korisnik["ime"],
                 "confidence": confidence,
-                "poruka":     f"Dobrodošao, {korisnik['ime']}!",
+                "poruka":     f"Dobrodosao, {korisnik['ime']}!",
             })
         else:
             db.collection("log_pristupa").add({
@@ -251,7 +235,7 @@ def recognize():
 
             posalji_mqtt("ALARM")
 
-            print(f"[RECOGNIZE] ❌ Nepoznat (sim={max_sim:.3f})")
+            print(f"[RECOGNIZE] Nepoznat (sim={max_sim:.3f})")
             return jsonify({
                 "status":    "nepoznat",
                 "prepoznat": False,
@@ -259,8 +243,8 @@ def recognize():
             })
 
     except Exception as e:
-        print(f"[RECOGNIZE] Greška: {e}")
-        return jsonify({"greška": str(e)}), 500
+        print(f"[RECOGNIZE] Greska: {e}")
+        return jsonify({"greska": str(e)}), 500
 
 
 @app.route("/korisnici", methods=["GET"])
@@ -278,7 +262,7 @@ def lista_korisnika():
             })
         return jsonify({"korisnici": lista, "ukupno": len(lista)})
     except Exception as e:
-        return jsonify({"greška": str(e)}), 500
+        return jsonify({"greska": str(e)}), 500
 
 
 @app.route("/log", methods=["GET"])
@@ -293,7 +277,7 @@ def log_pristupa():
         zapisi = [{"id": d.id, **d.to_dict()} for d in docs]
         return jsonify({"log": zapisi})
     except Exception as e:
-        return jsonify({"greška": str(e)}), 500
+        return jsonify({"greska": str(e)}), 500
 
 
 @app.route("/korisnici/<korisnik_id>", methods=["DELETE"])
@@ -302,7 +286,7 @@ def obrisi_korisnika(korisnik_id):
         db.collection("korisnici").document(korisnik_id).delete()
         return jsonify({"poruka": "Korisnik obrisan"})
     except Exception as e:
-        return jsonify({"greška": str(e)}), 500
+        return jsonify({"greska": str(e)}), 500
 
 
 if __name__ == "__main__":
