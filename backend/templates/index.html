@@ -869,9 +869,12 @@ function flashMqtt(msg) {
 }
 
 // ── Auto scan ──────────────────────────────────────────────────────────────────
+let scanning = false;
+
 function toggleAutoScan(on) {
-  clearInterval(autoScanTimer);
+  clearTimeout(autoScanTimer);
   autoScanTimer = null;
+  scanning = false;
   if (on) {
     if (!cameraStream) { startCamera().then(startAutoScan); }
     else startAutoScan();
@@ -882,11 +885,20 @@ function toggleAutoScan(on) {
 
 function startAutoScan() {
   document.getElementById("cameraWrap").classList.add("scanning");
-  autoScanTimer = setInterval(() => {
-    if (cameraStream) manualScan();
-  }, 3000);
+  scheduleNextScan();
 }
 
+function scheduleNextScan() {
+  if (!document.getElementById("autoScanToggle").checked) return;
+  autoScanTimer = setTimeout(async () => {
+    if (cameraStream && !scanning) {
+      scanning = true;
+      await manualScan();
+      scanning = false;
+    }
+    scheduleNextScan();
+  }, 3000);
+}
 // ── Camera (register) ──────────────────────────────────────────────────────────
 async function startRegCamera() {
   try {
