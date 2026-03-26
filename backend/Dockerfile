@@ -12,7 +12,7 @@ RUN apt-get update && \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-RUN python -c "from insightface.app import FaceAnalysis; fa = FaceAnalysis(name='buffalo_sc', root='/root/.insightface', providers=['CPUExecutionProvider']); fa.prepare(ctx_id=0, det_size=(320,320)); print('Model preuzet!')"
+RUN python -c "from insightface.app import FaceAnalysis; fa = FaceAnalysis(name='buffalo_l', root='/root/.insightface', providers=['CPUExecutionProvider']); fa.prepare(ctx_id=0, det_size=(160,160)); print('Model preuzet!')"
 
 COPY . .
 
