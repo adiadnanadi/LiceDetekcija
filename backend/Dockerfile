@@ -21,7 +21,7 @@ fa = FaceAnalysis(name='buffalo_l', providers=['CPUExecutionProvider']); \
 fa.prepare(ctx_id=0, det_size=(640, 640)); \
 print('buffalo_l model ugrajen u Docker image!')"
 
-# Kopiraj cijelu aplikaciju
+# Kopiraj cijelu aplikacijuu
 COPY . .
 
 EXPOSE 10000
