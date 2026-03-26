@@ -41,13 +41,12 @@ MQTT_PASSWORD = os.environ.get("MQTT_PASSWORD", "")
 print("[STARTUP] Ucitavam InsightFace buffalo_sc model...")
 face_app = None
 try:
-   
     face_app = FaceAnalysis(
-    name="buffalo_l",
-    root="/root/.insightface",
-    providers=["CPUExecutionProvider"]
-)
-face_app.prepare(ctx_id=0, det_size=(160, 160))
+        name="buffalo_sc",
+        root="/root/.insightface",
+        providers=["CPUExecutionProvider"]
+    )
+    face_app.prepare(ctx_id=0, det_size=(320, 320))
     print("[STARTUP] InsightFace model spreman!")
 except Exception as e:
     print(f"[STARTUP] Greska modela: {e}")
