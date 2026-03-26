@@ -30,6 +30,7 @@
     overflow-x: hidden;
   }
 
+  /* Grid background */
   body::before {
     content: '';
     position: fixed; inset: 0;
@@ -48,6 +49,7 @@
     padding: 30px 20px 60px;
   }
 
+  /* Header */
   header {
     display: flex;
     align-items: center;
@@ -72,10 +74,25 @@
     50%      { box-shadow: 0 0 30px rgba(0,229,255,0.7); }
   }
 
-  h1 { font-family: 'Syne', sans-serif; font-size: 2rem; font-weight: 800; letter-spacing: -0.5px; color: #fff; }
-  h1 span { color: var(--accent); }
-  .subtitle { font-size: 0.7rem; color: var(--dim); letter-spacing: 2px; text-transform: uppercase; margin-top: 2px; }
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: 2rem;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    color: #fff;
+  }
 
+  h1 span { color: var(--accent); }
+
+  .subtitle {
+    font-size: 0.7rem;
+    color: var(--dim);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+
+  /* API URL bar */
   .api-bar {
     display: flex; gap: 10px; align-items: center;
     background: var(--panel);
@@ -84,119 +101,437 @@
     padding: 12px 18px;
     margin-bottom: 30px;
   }
+
   .api-bar label { color: var(--dim); font-size: 0.75rem; white-space: nowrap; }
-  .api-bar input { flex: 1; background: transparent; border: none; color: var(--accent); font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; outline: none; }
+
+  .api-bar input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: var(--accent);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+    outline: none;
+  }
+
   .api-bar input::placeholder { color: var(--dim); }
-  .btn-save-url { background: var(--border); color: var(--accent); border: 1px solid var(--accent); padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 0.75rem; font-family: 'JetBrains Mono', monospace; transition: all 0.2s; }
+
+  .btn-save-url {
+    background: var(--border);
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    padding: 6px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.75rem;
+    font-family: 'JetBrains Mono', monospace;
+    transition: all 0.2s;
+  }
   .btn-save-url:hover { background: var(--accent); color: var(--bg); }
 
-  .tabs { display: flex; gap: 4px; margin-bottom: 30px; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 5px; width: fit-content; }
-  .tab { padding: 10px 28px; border-radius: 8px; cursor: pointer; font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase; color: var(--dim); transition: all 0.2s; border: 1px solid transparent; }
-  .tab.active { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+  /* Tabs */
+  .tabs {
+    display: flex; gap: 4px;
+    margin-bottom: 30px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 5px;
+    width: fit-content;
+  }
+
+  .tab {
+    padding: 10px 28px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.85rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--dim);
+    transition: all 0.2s;
+    border: 1px solid transparent;
+  }
+
+  .tab.active {
+    background: var(--accent);
+    color: var(--bg);
+    border-color: var(--accent);
+  }
+
   .tab:hover:not(.active) { color: var(--accent); }
 
-  .main-grid { display: grid; grid-template-columns: 1fr 380px; gap: 24px; }
+  /* Main grid */
+  .main-grid {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 24px;
+  }
+
   @media (max-width: 800px) { .main-grid { grid-template-columns: 1fr; } }
 
-  .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 24px; }
+  /* Panel */
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 24px;
+  }
 
-  .panel-title { font-family: 'Syne', sans-serif; font-size: 0.75rem; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: var(--dim); margin-bottom: 18px; display: flex; align-items: center; gap: 8px; }
-  .panel-title::before { content: ''; width: 6px; height: 6px; background: var(--accent); border-radius: 50%; box-shadow: 0 0 8px var(--accent); }
+  .panel-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--dim);
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
 
-  .camera-wrap { position: relative; border-radius: 10px; overflow: hidden; background: #000; aspect-ratio: 4/3; border: 2px solid var(--border); transition: border-color 0.3s; }
+  .panel-title::before {
+    content: '';
+    width: 6px; height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    box-shadow: 0 0 8px var(--accent);
+  }
+
+  /* Camera */
+  .camera-wrap {
+    position: relative;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #000;
+    aspect-ratio: 4/3;
+    border: 2px solid var(--border);
+    transition: border-color 0.3s;
+  }
+
   .camera-wrap.scanning  { border-color: var(--accent); box-shadow: var(--glow); }
   .camera-wrap.success   { border-color: var(--green);  box-shadow: 0 0 20px rgba(0,255,136,0.4); }
   .camera-wrap.fail      { border-color: var(--red);    box-shadow: 0 0 20px rgba(255,51,85,0.4); }
 
-  video { width: 100%; height: 100%; object-fit: cover; display: block; }
+  video, canvas {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
+  }
 
-  .scan-line { position: absolute; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, var(--accent), transparent); opacity: 0; pointer-events: none; transition: opacity 0.3s; }
-  .scanning .scan-line { opacity: 1; animation: scan 2s linear infinite; }
-  @keyframes scan { 0% { top: 0%; } 100% { top: 100%; } }
+canvas { position: absolute; top: 0; left: 0; opacity: 0; }
 
-  .camera-wrap::before, .camera-wrap::after { content: ''; position: absolute; width: 20px; height: 20px; border-color: var(--accent); border-style: solid; z-index: 10; transition: border-color 0.3s; }
+  /* Scan line animation */
+  .scan-line {
+    position: absolute;
+    left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+  }
+
+  .scanning .scan-line {
+    opacity: 1;
+    animation: scan 2s linear infinite;
+  }
+
+  @keyframes scan {
+    0%   { top: 0%; }
+    100% { top: 100%; }
+  }
+
+  /* Corner markers */
+  .camera-wrap::before, .camera-wrap::after {
+    content: '';
+    position: absolute;
+    width: 20px; height: 20px;
+    border-color: var(--accent);
+    border-style: solid;
+    z-index: 10;
+    transition: border-color 0.3s;
+  }
   .camera-wrap::before { top: 10px; left: 10px; border-width: 2px 0 0 2px; }
   .camera-wrap::after  { bottom: 10px; right: 10px; border-width: 0 2px 2px 0; }
   .camera-wrap.success::before, .camera-wrap.success::after { border-color: var(--green); }
-  .camera-wrap.fail::before, .camera-wrap.fail::after { border-color: var(--red); }
+  .camera-wrap.fail::before,    .camera-wrap.fail::after    { border-color: var(--red); }
 
-  .no-camera { display: flex; align-items: center; justify-content: center; height: 100%; flex-direction: column; gap: 12px; color: var(--dim); font-size: 0.8rem; }
+  .no-camera {
+    display: flex; align-items: center; justify-content: center;
+    height: 100%;
+    flex-direction: column; gap: 12px;
+    color: var(--dim);
+    font-size: 0.8rem;
+  }
+
   .no-camera span { font-size: 2.5rem; }
 
+  /* Buttons */
   .btn-group { display: flex; gap: 10px; margin-top: 14px; }
-  .btn { flex: 1; padding: 12px; border-radius: 8px; border: 1px solid; cursor: pointer; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px; }
-  .btn-primary { background: var(--accent); border-color: var(--accent); color: var(--bg); }
+
+  .btn {
+    flex: 1;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid;
+    cursor: pointer;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+    font-weight: 400;
+    transition: all 0.2s;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--bg);
+  }
   .btn-primary:hover { opacity: 0.85; }
   .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
-  .btn-outline { background: transparent; border-color: var(--border); color: var(--text); }
+
+  .btn-outline {
+    background: transparent;
+    border-color: var(--border);
+    color: var(--text);
+  }
   .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
 
+  .btn-danger {
+    background: transparent;
+    border-color: var(--red);
+    color: var(--red);
+  }
+  .btn-danger:hover { background: var(--red); color: #fff; }
+
+  /* Form */
   .form-group { margin-bottom: 14px; }
-  .form-group label { display: block; font-size: 0.72rem; color: var(--dim); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
-  .form-group input { width: 100%; background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; outline: none; transition: border-color 0.2s; }
+
+  .form-group label {
+    display: block;
+    font-size: 0.72rem;
+    color: var(--dim);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .form-group input {
+    width: 100%;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
   .form-group input:focus { border-color: var(--accent); }
 
-  .status-card { padding: 16px; border-radius: 10px; border: 1px solid var(--border); background: rgba(0,0,0,0.3); margin-bottom: 16px; min-height: 80px; display: flex; align-items: center; gap: 14px; transition: all 0.3s; }
+  /* Status card */
+  .status-card {
+    padding: 16px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: rgba(0,0,0,0.3);
+    margin-bottom: 16px;
+    min-height: 80px;
+    display: flex; align-items: center; gap: 14px;
+    transition: all 0.3s;
+  }
+
   .status-card.idle    { border-color: var(--border); }
   .status-card.success { border-color: var(--green); background: rgba(0,255,136,0.05); }
   .status-card.error   { border-color: var(--red);   background: rgba(255,51,85,0.05); }
   .status-card.scanning{ border-color: var(--accent); background: rgba(0,229,255,0.05); }
 
   .status-icon { font-size: 2rem; flex-shrink: 0; }
-  .status-name { font-family: 'Syne', sans-serif; font-size: 1.2rem; font-weight: 800; color: #fff; }
-  .status-msg  { font-size: 0.75rem; color: var(--dim); margin-top: 2px; }
 
-  .confidence-bar { height: 4px; background: var(--border); border-radius: 2px; margin-top: 8px; overflow: hidden; }
-  .confidence-fill { height: 100%; background: var(--green); border-radius: 2px; transition: width 0.5s ease; }
+  .status-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: #fff;
+  }
 
+  .status-msg { font-size: 0.75rem; color: var(--dim); margin-top: 2px; }
+
+  .confidence-bar {
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    margin-top: 8px;
+    overflow: hidden;
+  }
+
+  .confidence-fill {
+    height: 100%;
+    background: var(--green);
+    border-radius: 2px;
+    transition: width 0.5s ease;
+  }
+
+  /* Log table */
   .log-list { max-height: 300px; overflow-y: auto; }
   .log-list::-webkit-scrollbar { width: 4px; }
+  .log-list::-webkit-scrollbar-track { background: transparent; }
   .log-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
-  .log-item { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 0.75rem; animation: fadeIn 0.3s ease; }
+  .log-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    font-size: 0.75rem;
+    animation: fadeIn 0.3s ease;
+  }
+
   @keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; } }
 
-  .log-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .log-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
   .log-dot.ok    { background: var(--green); box-shadow: 0 0 6px var(--green); }
   .log-dot.alarm { background: var(--red);   box-shadow: 0 0 6px var(--red); }
-  .log-ime  { flex: 1; color: var(--text); }
-  .log-time { color: var(--dim); font-size: 0.65rem; }
-  .log-badge { padding: 2px 8px; border-radius: 4px; font-size: 0.65rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+
+  .log-ime   { flex: 1; color: var(--text); }
+  .log-time  { color: var(--dim); font-size: 0.65rem; }
+  .log-badge {
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.65rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
   .log-badge.ok    { background: rgba(0,255,136,0.15); color: var(--green); }
   .log-badge.alarm { background: rgba(255,51,85,0.15);  color: var(--red); }
 
-  .user-item { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.04); animation: fadeIn 0.3s ease; }
-  .user-avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), #0066aa); display: flex; align-items: center; justify-content: center; font-family: 'Syne', sans-serif; font-weight: 800; font-size: 0.85rem; color: var(--bg); flex-shrink: 0; }
+  /* Users list */
+  .user-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    animation: fadeIn 0.3s ease;
+  }
+
+  .user-avatar {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), #0066aa);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 0.85rem;
+    color: var(--bg);
+    flex-shrink: 0;
+  }
+
   .user-info { flex: 1; min-width: 0; }
   .user-ime  { font-size: 0.85rem; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .user-email{ font-size: 0.65rem; color: var(--dim); }
-  .btn-del { background: transparent; border: 1px solid var(--border); color: var(--dim); padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: 0.7rem; transition: all 0.2s; }
+
+  .btn-del {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--dim);
+    padding: 4px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.7rem;
+    transition: all 0.2s;
+  }
   .btn-del:hover { border-color: var(--red); color: var(--red); }
 
-  .toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); margin-bottom: 16px; }
+  /* Auto scan toggle */
+  .toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 16px;
+  }
+
   .toggle-label { font-size: 0.78rem; color: var(--text); }
   .toggle-sub   { font-size: 0.65rem; color: var(--dim); }
-  .toggle { position: relative; width: 44px; height: 24px; }
+
+  .toggle {
+    position: relative;
+    width: 44px; height: 24px;
+  }
   .toggle input { opacity: 0; width: 0; height: 0; }
-  .slider { position: absolute; inset: 0; background: var(--border); border-radius: 24px; cursor: pointer; transition: 0.3s; }
-  .slider::before { content: ''; position: absolute; width: 18px; height: 18px; left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: 0.3s; }
+  .slider {
+    position: absolute; inset: 0;
+    background: var(--border);
+    border-radius: 24px;
+    cursor: pointer;
+    transition: 0.3s;
+  }
+  .slider::before {
+    content: '';
+    position: absolute;
+    width: 18px; height: 18px;
+    left: 3px; top: 3px;
+    background: #fff;
+    border-radius: 50%;
+    transition: 0.3s;
+  }
   input:checked + .slider { background: var(--accent); }
   input:checked + .slider::before { transform: translateX(20px); }
 
-  .mqtt-status { padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border); font-size: 0.72rem; color: var(--dim); margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
-  .dot-live { width: 8px; height: 8px; border-radius: 50%; background: var(--dim); flex-shrink: 0; transition: all 0.3s; }
+  /* Interval display */
+  .mqtt-status {
+    padding: 10px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    font-size: 0.72rem;
+    color: var(--dim);
+    margin-bottom: 14px;
+    display: flex; align-items: center; gap: 8px;
+  }
+
+  .dot-live {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--dim);
+    flex-shrink: 0;
+    transition: all 0.3s;
+  }
   .dot-live.active { background: var(--green); box-shadow: 0 0 8px var(--green); animation: blink 1s ease-in-out infinite; }
+
   @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
 
+  /* Hidden */
   .hidden { display: none !important; }
 
+  /* Loading spinner */
   @keyframes spin { to { transform: rotate(360deg); } }
-  .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.3); border-top-color: currentColor; border-radius: 50%; animation: spin 0.7s linear infinite; }
+  .spinner {
+    display: inline-block;
+    width: 14px; height: 14px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: currentColor;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
 </style>
 </head>
 <body>
 <div class="container">
 
+  <!-- Header -->
   <header>
     <div class="logo-icon">🔐</div>
     <div>
@@ -205,27 +540,31 @@
     </div>
   </header>
 
+  <!-- API URL bar -->
   <div class="api-bar">
     <label>API URL:</label>
     <input type="text" id="apiUrl" placeholder="https://tvoj-backend.onrender.com" />
     <button class="btn-save-url" onclick="saveApiUrl()">Spremi</button>
   </div>
 
+  <!-- Tabs -->
   <div class="tabs">
     <div class="tab active" onclick="switchTab('recognize')">🎯 Prepoznavanje</div>
     <div class="tab" onclick="switchTab('register')">➕ Registracija</div>
     <div class="tab" onclick="switchTab('admin')">⚙️ Admin</div>
   </div>
 
-  <!-- TAB: RECOGNIZE -->
+  <!-- ══════════════════ TAB: RECOGNIZE ══════════════════ -->
   <div id="tab-recognize">
     <div class="main-grid">
+
+      <!-- Camera -->
       <div>
         <div class="panel-title">Kamera</div>
-        <div class="camera-wrap" id="cameraWrap">
-          <video id="video" autoplay playsinline></video>
-          <div class="scan-line"></div>
-          <canvas id="canvas" style="display:none;"></canvas>
+      <div class="camera-wrap" id="cameraWrap">
+  <video id="video" autoplay playsinline></video>
+  <div class="scan-line"></div>
+        <canvas id="canvas" style="display:none;"></canvas>
           <div class="no-camera" id="noCam">
             <span>📷</span>
             <div>Kamera nije pokrenuta</div>
@@ -233,11 +572,15 @@
         </div>
         <div class="btn-group">
           <button class="btn btn-outline" onclick="startCamera()">▶ Pokreni kameru</button>
-          <button class="btn btn-primary" id="btnScan" onclick="manualScan()" disabled>🔍 Skeniraj</button>
+          <button class="btn btn-primary" id="btnScan" onclick="manualScan()" disabled>
+            🔍 Skeniraj
+          </button>
         </div>
       </div>
 
+      <!-- Right panel -->
       <div>
+        <!-- Status -->
         <div class="panel" style="margin-bottom:20px">
           <div class="panel-title">Rezultat</div>
           <div class="status-card idle" id="statusCard">
@@ -250,40 +593,48 @@
               </div>
             </div>
           </div>
+
+          <!-- Auto scan -->
           <div class="toggle-row">
             <div>
               <div class="toggle-label">Auto skeniranje</div>
-              <div class="toggle-sub">Čeka odgovor pa skenira ponovo</div>
+              <div class="toggle-sub">Skenira automatski svake 3 sekunde</div>
             </div>
             <label class="toggle">
               <input type="checkbox" id="autoScanToggle" onchange="toggleAutoScan(this.checked)">
               <span class="slider"></span>
             </label>
           </div>
+
           <div class="mqtt-status">
             <div class="dot-live" id="mqttDot"></div>
             <span id="mqttStatusText">ESP8266: čeka komandu</span>
           </div>
         </div>
 
+        <!-- Live log -->
         <div class="panel">
           <div class="panel-title">Log pristupa</div>
           <div class="log-list" id="logList">
-            <div style="color:var(--dim);font-size:0.75rem;text-align:center;padding:20px">Još nema zapisa u ovoj sesiji</div>
+            <div style="color:var(--dim);font-size:0.75rem;text-align:center;padding:20px">
+              Još nema zapisa u ovoj sesiji
+            </div>
           </div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- TAB: REGISTER -->
+  <!-- ══════════════════ TAB: REGISTER ══════════════════ -->
   <div id="tab-register" class="hidden">
     <div class="main-grid">
+
+      <!-- Camera za registraciju -->
       <div>
         <div class="panel-title">Slika za registraciju</div>
         <div class="camera-wrap" id="regCamWrap">
           <video id="regVideo" autoplay playsinline></video>
-          <canvas id="regCanvas" style="display:none;"></canvas>
+          <canvas id="regCanvas"></canvas>
           <div class="no-camera" id="regNoCam">
             <span>📷</span>
             <div>Pokrenite kameru</div>
@@ -291,14 +642,18 @@
         </div>
         <div class="btn-group">
           <button class="btn btn-outline" onclick="startRegCamera()">▶ Kamera</button>
-          <button class="btn btn-primary" onclick="captureRegPhoto()" id="btnCapture" disabled>📸 Snimi</button>
+          <button class="btn btn-primary" onclick="captureRegPhoto()" id="btnCapture" disabled>
+            📸 Snimi
+          </button>
         </div>
+        <!-- Preview snimljene slike -->
         <div id="regPreview" class="hidden" style="margin-top:14px">
           <div class="panel-title">Snimljena slika</div>
           <img id="regImg" style="width:100%;border-radius:10px;border:1px solid var(--border)" />
         </div>
       </div>
 
+      <!-- Register form -->
       <div>
         <div class="panel">
           <div class="panel-title">Podaci korisnika</div>
@@ -310,9 +665,11 @@
             <label>Email (opciono)</label>
             <input type="email" id="regEmail" placeholder="adnan@ets.ba" />
           </div>
+
           <button class="btn btn-primary" id="btnRegister" onclick="registerUser()" style="width:100%;margin-top:8px">
             ✅ Registriraj korisnika
           </button>
+
           <div class="status-card idle" id="regStatus" style="margin-top:16px;min-height:60px">
             <div class="status-icon" id="regStatusIcon">📋</div>
             <div>
@@ -325,49 +682,60 @@
     </div>
   </div>
 
-  <!-- TAB: ADMIN -->
+  <!-- ══════════════════ TAB: ADMIN ══════════════════ -->
   <div id="tab-admin" class="hidden">
     <div class="main-grid">
+
+      <!-- Korisnici -->
       <div class="panel">
         <div class="panel-title" style="justify-content:space-between;display:flex;align-items:center">
           <span style="display:flex;align-items:center;gap:8px">
             <span style="width:6px;height:6px;background:var(--accent);border-radius:50%;box-shadow:0 0 8px var(--accent)"></span>
             Registrirani korisnici
           </span>
-          <button class="btn btn-outline" style="padding:6px 12px;font-size:0.7rem" onclick="loadKorisnici()">🔄 Osvježi</button>
+          <button class="btn btn-outline" style="padding:6px 12px;font-size:0.7rem" onclick="loadKorisnici()">
+            🔄 Osvježi
+          </button>
         </div>
         <div id="korisniciList">
-          <div style="color:var(--dim);font-size:0.75rem;text-align:center;padding:30px">Kliknite Osvježi za učitavanje</div>
+          <div style="color:var(--dim);font-size:0.75rem;text-align:center;padding:30px">
+            Kliknite Osvježi za učitavanje
+          </div>
         </div>
       </div>
 
+      <!-- Log pristupa -->
       <div class="panel">
         <div class="panel-title" style="justify-content:space-between;display:flex;align-items:center">
           <span style="display:flex;align-items:center;gap:8px">
             <span style="width:6px;height:6px;background:var(--accent);border-radius:50%;box-shadow:0 0 8px var(--accent)"></span>
             Historija pristupa
           </span>
-          <button class="btn btn-outline" style="padding:6px 12px;font-size:0.7rem" onclick="loadLog()">🔄 Osvježi</button>
+          <button class="btn btn-outline" style="padding:6px 12px;font-size:0.7rem" onclick="loadLog()">
+            🔄 Osvježi
+          </button>
         </div>
         <div class="log-list" id="adminLogList">
-          <div style="color:var(--dim);font-size:0.75rem;text-align:center;padding:30px">Kliknite Osvježi za učitavanje</div>
+          <div style="color:var(--dim);font-size:0.75rem;text-align:center;padding:30px">
+            Kliknite Osvježi za učitavanje
+          </div>
         </div>
       </div>
     </div>
   </div>
 
-</div>
+</div><!-- /container -->
 
 <script>
 // ── State ──────────────────────────────────────────────────────────────────────
-let apiUrl       = localStorage.getItem("facegate_api") || window.location.origin;
-let cameraStream = null;
-let regStream    = null;
-let autoScanTimer= null;
-let capturedB64  = null;
-let sessionLog   = [];
-let scanning     = false;  // spriječava paralelne requestove
+let apiUrl = localStorage.getItem("facegate_api") || window.location.origin;
+let cameraStream  = null;
+let regStream     = null;
+let autoScanTimer = null;
+let capturedB64   = null;
+let sessionLog    = [];
 
+// ── Init ───────────────────────────────────────────────────────────────────────
 document.getElementById("apiUrl").value = apiUrl;
 
 // ── API URL ────────────────────────────────────────────────────────────────────
@@ -391,7 +759,8 @@ function switchTab(name) {
 async function startCamera() {
   try {
     cameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode:"user", width:640, height:480 } });
-    document.getElementById("video").srcObject = cameraStream;
+    const video  = document.getElementById("video");
+    video.srcObject = cameraStream;
     document.getElementById("noCam").classList.add("hidden");
     document.getElementById("btnScan").disabled = false;
   } catch (e) {
@@ -422,45 +791,42 @@ async function doRecognize(b64) {
 
   try {
     const res  = await fetch(`${apiUrl}/recognize`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
       body: JSON.stringify({ slika: b64 })
     });
     const data = await res.json();
 
     if (data.status === "prepoznat") {
-      setStatus("success", "✅", data.ime, `Pristup odobren · ${data.confidence}% sigurnost`, true, data.confidence);
+      setStatus("success","✅", data.ime, `Pristup odobren · ${data.confidence}% sigurnost`, true, data.confidence);
       document.getElementById("cameraWrap").className = "camera-wrap success";
       addLog(data.ime, "ok");
       flashMqtt("OTVORI — servo aktiviran");
     } else if (data.status === "nepoznat") {
-      setStatus("error", "🚫", "Nepoznata osoba", "Pristup odbijen — ALARM poslan", false);
+      setStatus("error","🚫","Nepoznata osoba", "Pristup odbijen — ALARM poslan", false);
       document.getElementById("cameraWrap").className = "camera-wrap fail";
       addLog("Nepoznata osoba", "alarm");
       flashMqtt("ALARM — trepćuća LED");
     } else if (data.status === "nema_lica") {
-      setStatus("idle", "👤", "Nema lica", "Pomjerite se bliže kameri", false);
+      setStatus("idle","👤","Nema lica","Pomjerite se bliže kameri", false);
       document.getElementById("cameraWrap").className = "camera-wrap";
     } else {
-      setStatus("error", "⚠️", "Greška", data.greska || data.greška || "Nepoznata greška", false);
+      setStatus("error","⚠️","Greška", data.greška || "Nepoznata greška", false);
       document.getElementById("cameraWrap").className = "camera-wrap fail";
     }
   } catch (e) {
-    setStatus("error", "❌", "Konekcija", "Server nedostupan: " + e.message, false);
+    setStatus("error","❌","Konekcija", "Server nedostupan: " + e.message, false);
     document.getElementById("cameraWrap").className = "camera-wrap fail";
   }
 
   setTimeout(() => {
-    if (document.getElementById("autoScanToggle").checked) {
-      document.getElementById("cameraWrap").className = "camera-wrap scanning";
-    } else {
-      document.getElementById("cameraWrap").className = "camera-wrap";
-    }
+    document.getElementById("cameraWrap").className = "camera-wrap" + (autoScanTimer ? " scanning" : "");
   }, 3000);
 }
 
 function setStatus(cls, icon, name, msg, showBar, conf = 0) {
-  document.getElementById("statusCard").className = "status-card " + cls;
+  const card = document.getElementById("statusCard");
+  card.className = "status-card " + cls;
   document.getElementById("statusIcon").textContent = icon;
   document.getElementById("statusName").textContent = name;
   document.getElementById("statusMsg").textContent  = msg;
@@ -502,11 +868,10 @@ function flashMqtt(msg) {
   }, 4000);
 }
 
-// ── Auto scan — čeka odgovor servera prije sljedećeg scana ────────────────────
+// ── Auto scan ──────────────────────────────────────────────────────────────────
 function toggleAutoScan(on) {
-  clearTimeout(autoScanTimer);
+  clearInterval(autoScanTimer);
   autoScanTimer = null;
-  scanning = false;
   if (on) {
     if (!cameraStream) { startCamera().then(startAutoScan); }
     else startAutoScan();
@@ -517,18 +882,8 @@ function toggleAutoScan(on) {
 
 function startAutoScan() {
   document.getElementById("cameraWrap").classList.add("scanning");
-  scheduleNextScan();
-}
-
-function scheduleNextScan() {
-  if (!document.getElementById("autoScanToggle").checked) return;
-  autoScanTimer = setTimeout(async () => {
-    if (cameraStream && !scanning) {
-      scanning = true;
-      await manualScan();
-      scanning = false;
-    }
-    scheduleNextScan();
+  autoScanTimer = setInterval(() => {
+    if (cameraStream) manualScan();
   }, 3000);
 }
 
@@ -564,23 +919,23 @@ async function registerUser() {
 
   try {
     const res  = await fetch(`${apiUrl}/register`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
       body: JSON.stringify({ ime, email, slika: capturedB64 })
     });
     const data = await res.json();
 
     if (data.poruka) {
-      setRegStatus("success", "✅", "Registrirano!", data.poruka);
+      setRegStatus("success","✅", "Registrirano!", data.poruka);
       document.getElementById("regIme").value   = "";
       document.getElementById("regEmail").value = "";
       capturedB64 = null;
       document.getElementById("regPreview").classList.add("hidden");
     } else {
-      setRegStatus("error", "❌", "Greška", data.greska || data.greška || "Nepoznata greška");
+      setRegStatus("error","❌","Greška", data.greška || "Nepoznata greška");
     }
   } catch (e) {
-    setRegStatus("error", "❌", "Konekcija", "Server nedostupan: " + e.message);
+    setRegStatus("error","❌","Konekcija", "Server nedostupan: " + e.message);
   }
 
   document.getElementById("btnRegister").innerHTML = "✅ Registriraj korisnika";
@@ -622,7 +977,7 @@ async function loadKorisnici() {
 
 async function obrisiKorisnika(id, ime) {
   if (!confirm(`Obrisati korisnika "${ime}"?`)) return;
-  await fetch(`${apiUrl}/korisnici/${id}`, { method: "DELETE" });
+  await fetch(`${apiUrl}/korisnici/${id}`, { method:"DELETE" });
   loadKorisnici();
 }
 
@@ -638,8 +993,8 @@ async function loadLog() {
       return;
     }
     el.innerHTML = data.log.map(l => {
-      const ok = l.status === "odobren";
-      const dt = l.timestamp ? new Date(l.timestamp).toLocaleString("bs-BA") : "—";
+      const ok  = l.status === "odobren";
+      const dt  = l.timestamp ? new Date(l.timestamp).toLocaleString("bs-BA") : "—";
       return `
         <div class="log-item">
           <div class="log-dot ${ok ? "ok" : "alarm"}"></div>
