@@ -2,6 +2,7 @@ import os
 import json
 import base64
 import numpy as np
+import urllib.request
 from io import BytesIO
 from PIL import Image
 from datetime import datetime
@@ -37,6 +38,9 @@ MQTT_TOPIC    = os.environ.get("MQTT_TOPIC", "faceGate/komanda")
 MQTT_USERNAME = os.environ.get("MQTT_USERNAME", "")
 MQTT_PASSWORD = os.environ.get("MQTT_PASSWORD", "")
 
+# ── Google Sheets (Apps Script Web App URL) ───────────────────
+SHEETS_URL = os.environ.get("SHEETS_URL", "")
+
 # ── InsightFace model ─────────────────────────────────────────
 print("[STARTUP] Ucitavam InsightFace buffalo_sc model...")
 face_app = None
@@ -69,6 +73,31 @@ def posalji_mqtt(komanda: str):
         print(f"[MQTT] Poslano: {komanda}")
     except Exception as e:
         print(f"[MQTT] Greska: {e}")
+
+
+def log_u_sheet(ime: str, status: str, confidence=None):
+    """Šalje podatke u Google Sheets preko Apps Script Web App URL-a."""
+    if not SHEETS_URL:
+        print("[SHEET] SHEETS_URL nije postavljen — preskačem")
+        return
+    try:
+        payload = json.dumps({
+            "action":     "logDetection",
+            "ime":        ime,
+            "status":     status,
+            "confidence": confidence or ""
+        }).encode("utf-8")
+
+        req = urllib.request.Request(
+            SHEETS_URL,
+            data=payload,
+            headers={"Content-Type": "application/json"},
+            method="POST"
+        )
+        urllib.request.urlopen(req, timeout=5)
+        print(f"[SHEET] Upisano: {ime} — {status}")
+    except Exception as e:
+        print(f"[SHEET] Greska: {e}")
 
 
 def base64_u_sliku(b64_string: str) -> np.ndarray:
@@ -217,6 +246,7 @@ def recognize():
             })
 
             posalji_mqtt("OTVORI")
+            log_u_sheet(korisnik["ime"], "odobren", confidence)  # ← NOVO
 
             print(f"[RECOGNIZE] Prepoznat: {korisnik['ime']} ({confidence}%)")
             return jsonify({
@@ -234,6 +264,7 @@ def recognize():
             })
 
             posalji_mqtt("ALARM")
+            log_u_sheet("Nepoznata osoba", "odbijen")  # ← NOVO
 
             print(f"[RECOGNIZE] Nepoznat (sim={max_sim:.3f})")
             return jsonify({
